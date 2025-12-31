@@ -1,0 +1,464 @@
+{% extends 'base.html' %}
+
+{% block title %}Web Services - xAPI LRS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="h2 mb-2">
+                        <span class="gradient-text">Web Services Management</span>
+                    </h1>
+                    <p class="text-muted">Configure and manage Moodle web services</p>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                        <i class="bi bi-plus-circle me-1"></i>Add Service
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Services List -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+            <div class="d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">Available Web Services</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadServices()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Service Name</th>
+                            <th>Short Name</th>
+                            <th>URL</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="servicesTableBody">
+                        <!-- Services will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-5" style="display: none;">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-gear fs-3 text-muted"></i>
+                </div>
+                <h5 class="text-muted mb-2">No Web Services</h5>
+                <p class="text-muted mb-3">Add your first web service to get started with Moodle integration</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                    <i class="bi bi-plus-circle me-1"></i>Add Web Service
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Service Modal -->
+<div class="modal fade" id="addServiceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Web Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addServiceForm">
+                    <div class="mb-3">
+                        <label class="form-label">Service Name *</label>
+                        <input type="text" class="form-control" id="serviceName" required placeholder="e.g., xAPI Bridge Service">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Short Name *</label>
+                        <input type="text" class="form-control" id="serviceShortName" required placeholder="e.g., xapi_bridge">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Moodle Instance *</label>
+                        <select class="form-select" id="moodleInstance" required>
+                            <option value="">Select Moodle Instance</option>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveService()">Add Service</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Service Modal -->
+<div class="modal fade" id="editServiceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Web Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editServiceForm">
+                    <input type="hidden" id="editServiceId">
+                    <div class="mb-3">
+                        <label class="form-label">Service Name *</label>
+                        <input type="text" class="form-control" id="editServiceName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Short Name *</label>
+                        <input type="text" class="form-control" id="editServiceShortName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Moodle Instance *</label>
+                        <select class="form-select" id="editMoodleInstance" required>
+                            <option value="">Select Moodle Instance</option>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateService()">Update Service</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+<div id="alertContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;"></div>
+
+<script>
+// Web Services Manager JavaScript
+let webServicesManager = {
+    services: [],
+    moodleIntegrations: [],
+    
+    async init() {
+        await this.loadMoodleIntegrations();
+        await this.loadServices();
+    },
+    
+    async loadMoodleIntegrations() {
+        try {
+            const response = await fetch('/api/moodle-integrations/');
+            if (response.ok) {
+                const data = await response.json();
+                this.moodleIntegrations = Array.isArray(data) ? data : [];
+                this.populateMoodleSelects();
+            } else {
+                this.showMessage('Failed to load Moodle integrations', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading Moodle integrations:', error);
+            this.showMessage('Error loading Moodle integrations', 'error');
+            this.moodleIntegrations = [];
+        }
+    },
+    
+    populateMoodleSelects() {
+        const addSelect = document.getElementById('moodleInstance');
+        const editSelect = document.getElementById('editMoodleInstance');
+        
+        const options = this.moodleIntegrations.map(integration => 
+            `<option value="${integration.id}">${integration.moodle_site_name}</option>`
+        ).join('');
+        
+        addSelect.innerHTML = '<option value="">Select Moodle Instance</option>' + options;
+        editSelect.innerHTML = '<option value="">Select Moodle Instance</option>' + options;
+    },
+    
+    async loadServices() {
+        try {
+            // Convert Moodle integrations to web services format
+            this.services = this.moodleIntegrations.map(integration => ({
+                id: integration.id,
+                name: integration.moodle_site_name,
+                shortname: 'moodle_service',
+                url: integration.moodle_url,
+                enabled: integration.is_active,
+                moodle_integration_id: integration.id
+            }));
+            
+            this.renderServices();
+        } catch (error) {
+            console.error('Error loading services:', error);
+            this.showMessage('Error loading web services', 'error');
+            this.services = [];
+        }
+    },
+    
+    renderServices() {
+        const tbody = document.getElementById('servicesTableBody');
+        const emptyState = document.getElementById('emptyState');
+        
+        if (this.services.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.style.display = 'block';
+        } else {
+            emptyState.style.display = 'none';
+            tbody.innerHTML = this.services.map(service => `
+                <tr>
+                    <td>
+                        <div class="fw-semibold">${service.name}</div>
+                        <small class="text-muted">ID: ${service.id}</small>
+                    </td>
+                    <td><code class="bg-light px-2 py-1 rounded">${service.shortname}</code></td>
+                    <td>
+                        <small class="text-muted text-truncate d-block" style="max-width: 200px;">
+                            <i class="bi bi-link-45deg me-1"></i>
+                            ${service.url}
+                        </small>
+                    </td>
+                    <td>
+                        <span class="badge ${service.enabled ? 'bg-success' : 'bg-secondary'}">
+                            ${service.enabled ? 'Enabled' : 'Disabled'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="webServicesManager.editService(${service.id})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-info" onclick="webServicesManager.testService(${service.id})">
+                                <i class="bi bi-lightning-charge"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="webServicesManager.deleteService(${service.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    },
+    
+    async saveService() {
+        const name = document.getElementById('serviceName').value;
+        const shortName = document.getElementById('serviceShortName').value;
+        const moodleInstanceId = document.getElementById('moodleInstance').value;
+        
+        if (!name || !shortName || !moodleInstanceId) {
+            this.showMessage('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        try {
+            // Create new service by updating the Moodle integration
+            const response = await fetch(`/api/moodle-integrations/${moodleInstanceId}/update/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCsrfToken()
+                },
+                body: JSON.stringify({
+                    moodle_site_name: name,
+                    is_active: true
+                })
+            });
+            
+            if (response.ok) {
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addServiceModal'));
+                modal.hide();
+                
+                // Reset form
+                document.getElementById('addServiceForm').reset();
+                
+                // Reload services
+                await this.loadServices();
+                
+                this.showMessage('Web service added successfully', 'success');
+            } else {
+                const errorData = await response.json();
+                this.showMessage(errorData.error || 'Failed to add web service', 'error');
+            }
+            
+        } catch (error) {
+            console.error('Error adding web service:', error);
+            this.showMessage('Failed to add web service', 'error');
+        }
+    },
+    
+    editService(id) {
+        const service = this.services.find(s => s.id === id);
+        if (!service) return;
+        
+        document.getElementById('editServiceId').value = service.id;
+        document.getElementById('editServiceName').value = service.name;
+        document.getElementById('editServiceShortName').value = service.shortname;
+        document.getElementById('editMoodleInstance').value = service.moodle_integration_id;
+        
+        const modal = new bootstrap.Modal(document.getElementById('editServiceModal'));
+        modal.show();
+    },
+    
+    async updateService() {
+        const id = document.getElementById('editServiceId').value;
+        const name = document.getElementById('editServiceName').value;
+        const shortName = document.getElementById('editServiceShortName').value;
+        const moodleInstanceId = document.getElementById('editMoodleInstance').value;
+        
+        if (!name || !shortName || !moodleInstanceId) {
+            this.showMessage('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/moodle-integrations/${moodleInstanceId}/update/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCsrfToken()
+                },
+                body: JSON.stringify({
+                    moodle_site_name: name,
+                    is_active: true
+                })
+            });
+            
+            if (response.ok) {
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editServiceModal'));
+                modal.hide();
+                
+                // Reload services
+                await this.loadServices();
+                
+                this.showMessage('Web service updated successfully', 'success');
+            } else {
+                const errorData = await response.json();
+                this.showMessage(errorData.error || 'Failed to update web service', 'error');
+            }
+            
+        } catch (error) {
+            console.error('Error updating web service:', error);
+            this.showMessage('Failed to update web service', 'error');
+        }
+    },
+    
+    async deleteService(id) {
+        const service = this.services.find(s => s.id === id);
+        if (!service) return;
+        
+        if (!confirm(`Are you sure you want to delete "${service.name}"?`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/moodle-integrations/${service.moodle_integration_id}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': this.getCsrfToken()
+                }
+            });
+            
+            if (response.ok) {
+                await this.loadServices();
+                this.showMessage('Web service deleted successfully', 'success');
+            } else {
+                const errorData = await response.json();
+                this.showMessage(errorData.error || 'Failed to delete web service', 'error');
+            }
+            
+        } catch (error) {
+            console.error('Error deleting web service:', error);
+            this.showMessage('Failed to delete web service', 'error');
+        }
+    },
+    
+    async testService(id) {
+        const service = this.services.find(s => s.id === id);
+        if (!service) return;
+        
+        try {
+            const response = await fetch('/api/test-moodle-connection/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCsrfToken()
+                },
+                body: JSON.stringify({
+                    moodle_url: service.url,
+                    token: '' // Would need to get token from integration
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.connected) {
+                this.showMessage(`Successfully connected to ${service.name}`, 'success');
+            } else {
+                this.showMessage(`Failed to connect to ${service.name}: ${result.message}`, 'error');
+            }
+            
+        } catch (error) {
+            console.error('Error testing service:', error);
+            this.showMessage('Failed to test service connection', 'error');
+        }
+    },
+    
+    getCsrfToken() {
+        const name = 'csrftoken';
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    },
+    
+    showMessage(text, type = 'success') {
+        const container = document.getElementById('alertContainer');
+        const alertId = 'alert-' + Date.now();
+        
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const alertHtml = `
+            <div id="${alertId}" class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${text}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            const alert = document.getElementById(alertId);
+            if (alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }, 3000);
+    }
+};
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    webServicesManager.init();
+});
+
+// Global functions for onclick handlers
+window.loadServices = () => webServicesManager.loadServices();
+window.saveService = () => webServicesManager.saveService();
+window.updateService = () => webServicesManager.updateService();
+</script>
+{% endblock %}

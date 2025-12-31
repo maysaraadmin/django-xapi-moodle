@@ -1,0 +1,188 @@
+/* Custom xAPI LRS Admin Styles */
+
+/* Header customization */
+#header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-bottom: none;
+}
+
+#header a:link, #header a:visited {
+    color: #fff;
+}
+
+#branding h1, #branding h1 a:link, #branding h1 a:visited {
+    color: #fff;
+}
+
+/* Dashboard improvements */
+.dashboard .module {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.dashboard .module h2 {
+    background: #667eea;
+    color: white;
+    border-radius: 8px 8px 0 0;
+    padding: 10px 15px;
+}
+
+/* Statement list improvements */
+.change-list .results {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.change-list table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.change-list th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #667eea;
+    color: #495057;
+    font-weight: 600;
+}
+
+.change-list td {
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.change-list tr:hover {
+    background-color: #f8f9ff;
+}
+
+/* Status indicators */
+.field-is_valid {
+    text-align: center;
+}
+
+.field-is_valid .yes {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.field-is_valid .no {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Button improvements */
+.button, input[type=submit], input[type=button], .submit-row input {
+    background: #667eea;
+    border-color: #667eea;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover {
+    background: #5a6fd8;
+    border-color: #5a6fd8;
+}
+
+.button.default, .submit-row input.default {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.button.default:hover, .submit-row input.default:hover {
+    background: #218838;
+    border-color: #218838;
+}
+
+/* Fieldset improvements */
+fieldset.collapse {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+fieldset.collapse h2 {
+    color: #667eea;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Form improvements */
+.form-row {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 15px 0;
+}
+
+.form-row:last-child {
+    border-bottom: none;
+}
+
+/* Search improvements */
+#searchbar {
+    border-radius: 20px;
+    border: 2px solid #e9ecef;
+    padding: 8px 15px;
+    margin-bottom: 20px;
+}
+
+#searchbar:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Object display improvements */
+.json-display {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    max-width: 300px;
+    overflow-x: auto;
+}
+
+/* Timestamp improvements */
+.field-timestamp {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #6c757d;
+}
+
+/* Activity and Verb styling */
+.verb-display {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.activity-name {
+    background: #f3e5f5;
+    color: #721c24;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .change-list .results {
+        overflow-x: auto;
+    }
+    
+    .dashboard .module {
+        margin-bottom: 20px;
+    }
+    
+    #content {
+        padding: 10px;
+    }
+}

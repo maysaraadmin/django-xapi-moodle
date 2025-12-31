@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - xAPI LRS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="h2 mb-2">
+                        <span class="gradient-text">xAPI Learning Record Store</span>
+                    </h1>
+                    <p class="text-muted">Manage and monitor your learning analytics</p>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-gradient btn-lg">
+                        <i class="bi bi-plus-circle me-1"></i>Quick Setup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LRS Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card hover-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-2">
+                                <i class="bi bi-file-text text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">Total Statements</h6>
+                            <div class="h3 mb-0">{{ stats.total_statements }}</div>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up"></i> 12% from last week
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card hover-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                <i class="bi bi-people text-success fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">Active Learners</h6>
+                            <div class="h3 mb-0">{{ stats.total_actors }}</div>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up"></i> 8% from last week
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card hover-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                <i class="bi bi-book text-info fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">Courses</h6>
+                            <div class="h3 mb-0">{{ stats.total_activities }}</div>
+                            <small class="text-muted">
+                                <i class="bi bi-dash"></i> No change
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card hover-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                <i class="bi bi-graph-up text-warning fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">Total Verbs</h6>
+                            <div class="h3 mb-0">{{ stats.total_verbs }}</div>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up"></i> 3% from last week
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Statements -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="mb-0">Recent Learning Activities</h5>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Learner</th>
+                                    <th>Activity</th>
+                                    <th>Action</th>
+                                    <th>Time</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for statement in recent_statements %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-2">
+                                                <i class="bi bi-person-fill text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ statement.actor_name }}</div>
+                                                <small class="text-muted">{{ statement.actor_email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <div class="fw-semibold">{{ statement.activity_name }}</div>
+                                            <small class="text-muted">{{ statement.activity_type }}</small>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge {% if statement.result_completion %}bg-success{% else %}bg-info{% endif %}">{{ statement.verb_display }}</span></td>
+                                    <td><small class="text-muted">{{ statement.timestamp|date:"H:i" }} ago</small></td>
+                                    <td>
+                                        {% if statement.result_score %}
+                                            <span class="badge bg-primary">{{ statement.result_score }}%</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            No learning activities recorded yet
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary d-flex align-items-center justify-content-start">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Create New Statement
+                        </button>
+                        <button class="btn btn-outline-success d-flex align-items-center justify-content-start">
+                            <i class="bi bi-upload me-1"></i>
+                            Import Learning Data
+                        </button>
+                        <button class="btn btn-outline-info d-flex align-items-center justify-content-start">
+                            <i class="bi bi-graph-up me-1"></i>
+                            Generate Report
+                        </button>
+                        <button class="btn btn-outline-warning d-flex align-items-center justify-content-start">
+                            <i class="bi bi-gear me-1"></i>
+                            LRS Configuration
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Moodle Integrations -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="mb-0">Moodle Integrations</h5>
+                        <a href="/moodle-manager/" class="btn btn-sm btn-primary">
+                            <i class="bi bi-gear"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <div class="fw-semibold">Production Moodle</div>
+                                <small class="text-muted">moodle.example.com</small>
+                            </div>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <div class="fw-semibold">Testing Moodle</div>
+                                <small class="text-muted">test.moodle.example.com</small>
+                            </div>
+                            <span class="badge bg-secondary">Inactive</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
