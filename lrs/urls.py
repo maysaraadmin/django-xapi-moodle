@@ -43,4 +43,7 @@ urlpatterns = [
     path('generate-xapi-reports/', views.generate_xapi_reports_api, name='generate-xapi-reports'),
     path('download-xapi-report/', views.download_xapi_report, name='download-xapi-report'),
     path('statements/get', views.StatementViewSet.as_view({'get': 'get_statements'}), name='get-statements'),
+    
+    # v1 API endpoints for external compatibility
+    path('v1/models/', views.v1_models_api, name='v1-models'),
 ]

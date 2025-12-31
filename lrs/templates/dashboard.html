@@ -15,7 +15,7 @@
                     <p class="text-muted">Manage and monitor your learning analytics</p>
                 </div>
                 <div class="text-end">
-                    <button class="btn btn-gradient btn-lg">
+                    <button class="btn btn-gradient btn-lg" onclick="window.location.href='/moodle-manager/'">
                         <i class="bi bi-plus-circle me-1"></i>Quick Setup
                     </button>
                 </div>
@@ -117,7 +117,7 @@
                 <div class="card-header bg-white border-bottom">
                     <div class="d-flex align-items-center justify-content-between">
                         <h5 class="mb-0">Recent Learning Activities</h5>
-                        <button class="btn btn-sm btn-outline-primary">
+                        <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
                             <i class="bi bi-arrow-clockwise me-1"></i>Refresh
                         </button>
                     </div>
@@ -189,21 +189,21 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <button class="btn btn-outline-primary d-flex align-items-center justify-content-start">
-                            <i class="bi bi-plus-circle me-1"></i>
-                            Create New Statement
+                        <button class="btn btn-outline-primary d-flex align-items-center justify-content-start" onclick="window.location.href='/moodle-manager/'">
+                            <i class="bi bi-cloud-arrow-up me-1"></i>
+                            Manage Moodle Instances
                         </button>
-                        <button class="btn btn-outline-success d-flex align-items-center justify-content-start">
-                            <i class="bi bi-upload me-1"></i>
-                            Import Learning Data
+                        <button class="btn btn-outline-success d-flex align-items-center justify-content-start" onclick="window.location.href='/web-services/'">
+                            <i class="bi bi-gear-wide-connected me-1"></i>
+                            Web Services
                         </button>
-                        <button class="btn btn-outline-info d-flex align-items-center justify-content-start">
+                        <button class="btn btn-outline-info d-flex align-items-center justify-content-start" onclick="generateDashboardReport()">
                             <i class="bi bi-graph-up me-1"></i>
                             Generate Report
                         </button>
-                        <button class="btn btn-outline-warning d-flex align-items-center justify-content-start">
+                        <button class="btn btn-outline-warning d-flex align-items-center justify-content-start" onclick="window.location.href='/admin/'">
                             <i class="bi bi-gear me-1"></i>
-                            LRS Configuration
+                            Admin Dashboard
                         </button>
                     </div>
                 </div>
@@ -214,26 +214,17 @@
                 <div class="card-header bg-white border-bottom">
                     <div class="d-flex align-items-center justify-content-between">
                         <h5 class="mb-0">Moodle Integrations</h5>
-                        <a href="/moodle-manager/" class="btn btn-sm btn-primary">
+                        <a href="/moodle-manager/" class="btn btn-sm btn-primary" title="Manage Moodle Integrations">
                             <i class="bi bi-gear"></i>
                         </a>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <div>
-                                <div class="fw-semibold">Production Moodle</div>
-                                <small class="text-muted">moodle.example.com</small>
-                            </div>
-                            <span class="badge bg-success">Active</span>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <div>
-                                <div class="fw-semibold">Testing Moodle</div>
-                                <small class="text-muted">test.moodle.example.com</small>
-                            </div>
-                            <span class="badge bg-secondary">Inactive</span>
+                    <div class="list-group list-group-flush" id="moodleIntegrationsList">
+                        <!-- Moodle integrations will be loaded here -->
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                            Loading Moodle integrations...
                         </div>
                     </div>
                 </div>
@@ -241,4 +232,184 @@
         </div>
     </div>
 </div>
+
+<script>
+// Load Moodle integrations on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadMoodleIntegrations();
+});
+
+async function loadMoodleIntegrations() {
+    const listContainer = document.getElementById('moodleIntegrationsList');
+    
+    try {
+        const response = await fetch('/api/moodle-integrations/');
+        
+        if (response.ok) {
+            const integrations = await response.json();
+            renderMoodleIntegrations(integrations);
+        } else {
+            throw new Error('Failed to load integrations');
+        }
+    } catch (error) {
+        console.error('Error loading Moodle integrations:', error);
+        
+        // Show error state
+        listContainer.innerHTML = `
+            <div class="text-center py-3">
+                <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                <small class="text-muted">Failed to load integrations</small>
+            </div>
+        `;
+    }
+}
+
+function renderMoodleIntegrations(integrations) {
+    const listContainer = document.getElementById('moodleIntegrationsList');
+    
+    if (integrations.length === 0) {
+        listContainer.innerHTML = `
+            <div class="text-center py-3">
+                <i class="bi bi-cloud-arrow-up text-muted me-2"></i>
+                <small class="text-muted">No Moodle integrations configured</small>
+                <div class="mt-2">
+                    <a href="/moodle-manager/" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Add Integration
+                    </a>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    const integrationsHtml = integrations.map(integration => `
+        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="cursor: pointer;" onclick="window.location.href='/moodle-manager/'">
+            <div>
+                <div class="fw-semibold">${integration.moodle_site_name}</div>
+                <small class="text-muted">${integration.moodle_url}</small>
+            </div>
+            <span class="badge ${integration.is_active ? 'bg-success' : 'bg-secondary'}">
+                ${integration.is_active ? 'Active' : 'Inactive'}
+            </span>
+        </div>
+    `).join('');
+    
+    listContainer.innerHTML = integrationsHtml;
+}
+
+async function generateDashboardReport() {
+    // Get the button that was clicked (fix event.target issue)
+    const button = event && event.target ? event.target.closest('button') : document.querySelector('button[onclick*="generateDashboardReport"]');
+    if (!button) {
+        showDashboardMessage('Error: Could not find button', 'error');
+        return;
+    }
+    
+    const originalContent = button.innerHTML;
+    
+    try {
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating...';
+        button.disabled = true;
+        
+        // First get Moodle integrations to use for report generation
+        const integrationsResponse = await fetch('/api/moodle-integrations/');
+        if (!integrationsResponse.ok) {
+            throw new Error('Failed to get Moodle integrations');
+        }
+        
+        const integrations = await integrationsResponse.json();
+        if (integrations.length === 0) {
+            showDashboardMessage('No Moodle integrations found. Please add a Moodle instance first.', 'error');
+            return;
+        }
+        
+        // Use the first active integration for report generation
+        const integration = integrations.find(i => i.is_active) || integrations[0];
+        
+        // Generate report using API with required parameters
+        const response = await fetch('/api/generate-xapi-reports/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                moodle_url: integration.moodle_url,
+                token: integration.moodle_token
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            
+            // Show success message
+            showDashboardMessage(`Successfully generated report with ${result.reports_count || 0} statements`, 'success');
+            
+            // Offer download
+            if (result.download_url) {
+                setTimeout(() => {
+                    if (confirm('Report generated! Would you like to download the report?')) {
+                        window.open(result.download_url, '_blank');
+                    }
+                }, 1000);
+            }
+        } else {
+            const errorData = await response.json();
+            showDashboardMessage(errorData.error || 'Failed to generate report', 'error');
+        }
+    } catch (error) {
+        console.error('Error generating report:', error);
+        showDashboardMessage('Failed to generate report: ' + error.message, 'error');
+    } finally {
+        // Restore button
+        if (button) {
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        }
+    }
+}
+
+function getCsrfToken() {
+    const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+    return cookieValue || '';
+}
+
+function showDashboardMessage(message, type) {
+    // Create a toast notification
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Add toast and show it
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    const toastElement = toastContainer.lastElementChild;
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+    
+    // Remove toast after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+</script>
+
 {% endblock %}

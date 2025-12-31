@@ -1078,3 +1078,53 @@ def download_xapi_report(request):
         return Response({
             'error': f'Failed to download report: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def v1_models_api(request):
+    """v1 API models endpoint for external compatibility"""
+    try:
+        from .models import Statement, Actor, Verb, Activity, MoodleIntegration
+        
+        # Return model information in v1 API format
+        models_data = {
+            'models': [
+                {
+                    'name': 'Statement',
+                    'count': Statement.objects.count(),
+                    'description': 'xAPI Learning Statements'
+                },
+                {
+                    'name': 'Actor', 
+                    'count': Actor.objects.count(),
+                    'description': 'xAPI Actors (Learners/Instructors)'
+                },
+                {
+                    'name': 'Verb',
+                    'count': Verb.objects.count(), 
+                    'description': 'xAPI Verbs (Actions)'
+                },
+                {
+                    'name': 'Activity',
+                    'count': Activity.objects.count(),
+                    'description': 'xAPI Activities (Courses/Resources)'
+                },
+                {
+                    'name': 'MoodleIntegration',
+                    'count': MoodleIntegration.objects.filter(is_active=True).count(),
+                    'description': 'Active Moodle Integrations'
+                }
+            ],
+            'version': 'v1',
+            'api_version': '1.0.0',
+            'lrs_type': 'xAPI Learning Record Store'
+        }
+        
+        return Response(models_data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': f'Failed to get models: {str(e)}',
+            'version': 'v1'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
