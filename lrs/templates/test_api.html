@@ -1,35 +1,39 @@
 {% extends 'base.html' %}
+{% load django_bootstrap5 %}
 
 {% block title %}Test API - xAPI LRS{% endblock %}
 
 {% block content %}
 <div x-data="testApi()" x-init="init()">
     <!-- Header -->
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900">API Testing</h2>
-        <p class="mt-1 text-sm text-gray-600">Test xAPI and Moodle API endpoints</p>
+    <div class="mb-4">
+        <h2 class="h2">API Testing</h2>
+        <p class="text-muted">Test xAPI and Moodle API endpoints</p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="row">
         <!-- xAPI Statement Test -->
-        <div class="bg-white shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Create xAPI Statement</h3>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Create xAPI Statement</h3>
+                </div>
+                <div class="card-body">
                 
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Actor Name</label>
-                        <input type="text" x-model="xapiTest.actor.name" placeholder="John Doe" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mb-3">
+                        <label class="form-label">Actor Name</label>
+                        <input type="text" x-model="xapiTest.actor.name" placeholder="John Doe" class="form-control">
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Actor Email</label>
-                        <input type="email" x-model="xapiTest.actor.mbox" placeholder="john@example.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mb-3">
+                        <label class="form-label">Actor Email</label>
+                        <input type="email" x-model="xapiTest.actor.mbox" placeholder="john@example.com" class="form-control">
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Verb</label>
-                        <select x-model="xapiTest.verb" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mb-3">
+                        <label class="form-label">Verb</label>
+                        <select x-model="xapiTest.verb" class="form-select">
                             <option value="http://adlnet.gov/expapi/verbs/completed">completed</option>
                             <option value="http://adlnet.gov/expapi/verbs/experienced">experienced</option>
                             <option value="http://adlnet.gov/expapi/verbs/attempted">attempted</option>
@@ -38,14 +42,14 @@
                         </select>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Activity Name</label>
-                        <input type="text" x-model="xapiTest.activity.name" placeholder="Course Introduction" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mb-3">
+                        <label class="form-label">Activity Name</label>
+                        <input type="text" x-model="xapiTest.activity.name" placeholder="Course Introduction" class="form-control">
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Activity ID</label>
-                        <input type="text" x-model="xapiTest.activity.id" placeholder="http://example.com/activity/1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mb-3">
+                        <label class="form-label">Activity ID</label>
+                        <input type="text" x-model="xapiTest.activity.id" placeholder="http://example.com/activity/1" class="form-control">
                     </div>
                     
                     <div class="flex items-center">
@@ -58,33 +62,39 @@
                         <input type="number" x-model="xapiTest.result.max" placeholder="100" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     
-                    <button @click="sendXapiStatement" :disabled="xapiTest.loading" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                        <span x-show="!xapiTest.loading">Send xAPI Statement</span>
-                        <span x-show="xapiTest.loading">Sending...</span>
-                    </button>
-                </div>
-                
-                <!-- xAPI Response -->
-                <div x-show="xapiTest.response" class="mt-4">
-                    <h4 class="font-medium text-gray-900 mb-2">Response:</h4>
-                    <div class="bg-gray-50 p-3 rounded">
-                        <pre class="text-xs overflow-x-auto" x-text="JSON.stringify(xapiTest.response, null, 2)"></pre>
+                    <div class="mt-4">
+                        <button @click="sendXapiStatement" :disabled="xapiTest.loading" class="btn btn-primary w-100">
+                            <span x-show="!xapiTest.loading"><i class="bi bi-send me-1"></i>Send xAPI Statement</span>
+                            <span x-show="xapiTest.loading"><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Sending...</span>
+                        </button>
+                    </div>
+                    
+                    <!-- xAPI Response -->
+                    <div x-show="xapiTest.response" class="mt-4">
+                        <h5 class="fw-semibold mb-2">Response:</h5>
+                        <pre class="bg-light p-3 rounded small" x-text="JSON.stringify(xapiTest.response, null, 2)"></pre>
                     </div>
                 </div>
+                
             </div>
         </div>
 
         <!-- Moodle Event Test -->
-        <div class="bg-white shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Send Moodle Event</h3>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Send Moodle Event</h3>
+                </div>
+                <div class="card-body">
                 
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
-                        <select x-model="moodleTest.event_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mb-3">
+                        <label class="form-label">Event Type</label>
+                        <select x-model="moodleTest.event_type" class="form-select">
                             <option value="course_viewed">course_viewed</option>
                             <option value="course_completed">course_completed</option>
+                            <option value="user_loggedin">user_loggedin</option>
+                            <option value="user_loggedout">user_loggedout</option>
                             <option value="quiz_attempt_submitted">quiz_attempt_submitted</option>
                             <option value="assignment_submitted">assignment_submitted</option>
                             <option value="forum_post_created">forum_post_created</option>
@@ -92,9 +102,9 @@
                         </select>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
-                        <input type="number" x-model="moodleTest.user_id" placeholder="123" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mb-3">
+                        <label class="form-label">User ID</label>
+                        <input type="text" x-model="moodleTest.user_id" placeholder="2" class="form-control">
                     </div>
                     
                     <div>
@@ -102,9 +112,9 @@
                         <input type="text" x-model="moodleTest.user_name" placeholder="John Doe" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Course ID</label>
-                        <input type="number" x-model="moodleTest.course_id" placeholder="1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mb-3">
+                        <label class="form-label">Course ID</label>
+                        <input type="text" x-model="moodleTest.course_id" placeholder="3" class="form-control">
                     </div>
                     
                     <div>
@@ -112,14 +122,14 @@
                         <input type="text" x-model="moodleTest.course_name" placeholder="Introduction to Psychology" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Activity ID</label>
-                        <input type="number" x-model="moodleTest.activity_id" placeholder="1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mb-3">
+                        <label class="form-label">Activity ID</label>
+                        <input type="text" x-model="moodleTest.activity_id" placeholder="1" class="form-control">
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Activity Type</label>
-                        <select x-model="moodleTest.activity_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mb-3">
+                        <label class="form-label">Activity Type</label>
+                        <select x-model="moodleTest.activity_type" class="form-select">
                             <option value="quiz">quiz</option>
                             <option value="assignment">assignment</option>
                             <option value="forum">forum</option>
@@ -143,19 +153,20 @@
                         <input type="number" x-model="moodleTest.max_grade" placeholder="100" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     
-                    <button @click="sendMoodleEvent" :disabled="moodleTest.loading" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50">
-                        <span x-show="!moodleTest.loading">Send Moodle Event</span>
-                        <span x-show="moodleTest.loading">Sending...</span>
-                    </button>
-                </div>
-                
-                <!-- Moodle Response -->
-                <div x-show="moodleTest.response" class="mt-4">
-                    <h4 class="font-medium text-gray-900 mb-2">Response:</h4>
-                    <div class="bg-gray-50 p-3 rounded">
-                        <pre class="text-xs overflow-x-auto" x-text="JSON.stringify(moodleTest.response, null, 2)"></pre>
+                    <div class="mt-4">
+                        <button @click="sendMoodleEvent" :disabled="moodleTest.loading" class="btn btn-success w-100">
+                            <span x-show="!moodleTest.loading"><i class="bi bi-send me-1"></i>Send Moodle Event</span>
+                            <span x-show="moodleTest.loading"><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Sending...</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Moodle Response -->
+                    <div x-show="moodleTest.response" class="mt-4">
+                        <h5 class="fw-semibold mb-2">Response:</h5>
+                        <pre class="bg-light p-3 rounded small" x-text="JSON.stringify(moodleTest.response, null, 2)"></pre>
                     </div>
                 </div>
+                
             </div>
         </div>
     </div>
@@ -297,7 +308,7 @@ function testApi() {
                     event.max_grade = this.moodleTest.max_grade;
                 }
                 
-                const response = await fetch('/api/moodle/event', {
+                const response = await fetch('/api/moodle/event/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

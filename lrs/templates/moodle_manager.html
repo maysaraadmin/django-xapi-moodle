@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
+{% load django_bootstrap5 static %}
 
 {% block title %}Moodle Manager - xAPI LRS{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
 <style>
 /* Modern CSS for Moodle Manager */
 .hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%);
     border-radius: 1rem;
     padding: 3rem 0;
     margin-bottom: 2rem;
@@ -32,181 +35,37 @@
     border-radius: 0.75rem;
     padding: 1.5rem;
     text-align: center;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
+    height: 100%;
 }
 
 .stats-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
 .stats-number {
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
+    color: #fff;
 }
 
 .stats-label {
     font-size: 0.9rem;
-    opacity: 0.8;
-}
-
-.instance-card {
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
-
-.instance-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-.instance-card .card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-    font-weight: 600;
-}
-
-.instance-status {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 2rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.status-online {
-    background: rgba(76, 175, 80, 0.2);
-    color: #4ade80;
-}
-
-.status-offline {
-    background: rgba(220, 53, 69, 0.2);
-    color: #dc3545;
-}
-
-.action-btn {
-    border-radius: 0.5rem;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    transition: all 0.3s ease;
-}
-
-.action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.sync-section {
-    background: #f8f9fa;
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.sync-card {
-    background: white;
-    border: none;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
-    height: 100%;
-}
-
-.sync-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.sync-icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    color: #667eea;
-}
-
-.sync-title {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #333;
-}
-
-.sync-description {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-}
-
-.lrs-config {
-    background: #fff3cd;
-    border: 1px solid #ffc107;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-}
-
-.alert-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1050;
-    max-width: 400px;
-}
-
-.empty-state {
-    background: #f8f9fa;
-    border: 2px dashed #dee2e6;
-    border-radius: 1rem;
-    padding: 4rem 2rem;
-    text-align: center;
-}
-
-.empty-state-icon {
-    font-size: 4rem;
-    color: #6c757d;
-    margin-bottom: 1.5rem;
-}
-
-.modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-}
-
-.btn-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.btn-gradient:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-@media (max-width: 768px) {
-    .hero-section h1 {
-        font-size: 2rem;
-    }
-    
-    .stats-card {
-        margin-bottom: 1rem;
-    }
+    opacity: 0.9;
+    color: rgba(255, 255, 255, 0.9);
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<div class="hero-section">
+<div class="bg-primary bg-gradient text-white rounded-3 p-5 mb-4">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <h1>
+                <h1 class="display-5 fw-bold">
                     <i class="bi bi-cloud-arrow-up me-3"></i>
                     Moodle Manager
                 </h1>
@@ -222,7 +81,9 @@
                             <div class="stats-label">Active Connections</div>
                         </div>
                         <div class="stats-card">
-                            <div class="stats-number" id="totalStatements">0</div>
+                            <div class="spinner-border spinner-border-sm text-light" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
                             <div class="stats-label">xAPI Statements</div>
                         </div>
                     </div>
@@ -231,8 +92,12 @@
             <div class="col-lg-4 text-center">
                 <div class="stats-card">
                     <i class="bi bi-graph-up-arrow fs-1 mb-2"></i>
-                    <div class="stats-number">LRS</div>
-                    <div class="stats-label">Integration</div>
+                    <div class="card bg-white bg-opacity-10 text-white border-0">
+                        <div class="card-body text-center">
+                            <div class="h2 mb-1" id="totalCourses">0</div>
+                            <div class="small">Courses</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -243,11 +108,9 @@
     <!-- Quick Actions -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Quick Actions</h4>
-                <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#addMoodleModal">
-                    <i class="bi bi-plus-circle me-2"></i>Add Moodle Instance
-                </button>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0">Moodle Instances</h4>
+                {% bootstrap_button "Add Instance" button_type="button" button_class="btn-primary" data_bs_toggle="modal" data_bs_target="#addMoodleModal" icon="plus-lg" %}
             </div>
         </div>
     </div>
@@ -264,9 +127,7 @@
         </div>
         <h4>No Moodle Instances Connected</h4>
         <p class="text-muted">Connect your first Moodle instance to start managing xAPI data</p>
-        <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#addMoodleModal">
-            <i class="bi bi-plus-circle me-2"></i>Add Moodle Instance
-        </button>
+        {% bootstrap_button "Add Instance" button_type="button" button_class="btn-light btn-lg" data_bs_toggle="modal" data_bs_target="#addMoodleModal" icon="plus-circle" %}
     </div>
 </div>
 
@@ -305,10 +166,8 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label class="form-label text-muted">Connection Status</label>
-                            <button class="btn btn-gradient w-100" onclick="testConnection()" id="testConnectionBtn">
-                                <i class="bi bi-lightning-charge me-2"></i>
-                                <span id="testBtnText">Test Connection</span>
-                            </button>
+                            {% bootstrap_button "Test Connection" button_type="button" button_class="btn-primary" id="testConnectionBtn" onclick="testConnection()" icon="plug" %}
+                            <span id="testBtnText" class="visually-hidden">Test Connection</span>
                         </div>
                     </div>
                 </div>
@@ -362,9 +221,7 @@
                         </div>
                         <h6 class="sync-title">Sync Users</h6>
                         <p class="sync-description">Import Moodle users as xAPI actors</p>
-                        <button class="btn btn-gradient w-100 action-btn" onclick="moodleManager.syncUsers()">
-                            <i class="bi bi-arrow-repeat me-2"></i>Sync Users
-                        </button>
+                        {% bootstrap_button "Sync Users" button_type="button" button_class="btn-success" onclick="syncUsers()" icon="arrow-repeat" %}
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6 mb-3">
@@ -374,9 +231,7 @@
                         </div>
                         <h6 class="sync-title">Sync Courses</h6>
                         <p class="sync-description">Import Moodle courses as xAPI activities</p>
-                        <button class="btn btn-gradient w-100 action-btn" onclick="moodleManager.syncCourses()">
-                            <i class="bi bi-arrow-repeat me-2"></i>Sync Courses
-                        </button>
+                        {% bootstrap_button "Sync Courses" button_type="button" button_class="btn-success" onclick="syncCourses()" icon="arrow-repeat" %}
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6 mb-3">
@@ -386,9 +241,7 @@
                         </div>
                         <h6 class="sync-title">Sync Activities</h6>
                         <p class="sync-description">Create xAPI statements from activities</p>
-                        <button class="btn btn-gradient w-100 action-btn" onclick="moodleManager.syncActivities()">
-                            <i class="bi bi-arrow-repeat me-2"></i>Sync Activities
-                        </button>
+                        {% bootstrap_button "Sync Activities" button_type="button" button_class="btn-success" onclick="syncActivities()" icon="arrow-repeat" %}
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6 mb-3">
@@ -398,12 +251,8 @@
                         </div>
                         <h6 class="sync-title">Generate Reports</h6>
                         <p class="sync-description">Create comprehensive xAPI reports</p>
-                        <button class="btn btn-gradient w-100 action-btn" onclick="moodleManager.generateReports()">
-                            <i class="bi bi-file-earmark-text me-2"></i>Generate Reports
-                        </button>
-                        <button class="btn btn-success w-100 mt-2 action-btn" onclick="moodleManager.downloadReport()" id="downloadReportBtn" style="display: none;">
-                            <i class="bi bi-download me-2"></i>Download Report
-                        </button>
+                        {% bootstrap_button "Generate Reports" button_type="button" button_class="btn-success" onclick="generateReports()" icon="file-earmark-text" %}
+                        {% bootstrap_button "Download Report" button_type="button" button_class="btn-success" onclick="downloadReport()" icon="download" %}
                     </div>
                 </div>
             </div>
@@ -431,9 +280,7 @@
                 </div>
                 <div class="row mt-3">
                     <div class="col-12">
-                        <button class="btn btn-gradient" onclick="moodleManager.saveLrsConfig()">
-                            <i class="bi bi-check-circle me-2"></i>Save LRS Configuration
-                        </button>
+                        {% bootstrap_button "Save Configuration" button_type="button" button_class="btn-primary" onclick="saveLrsConfig()" icon="save" %}
                     </div>
                 </div>
             </div>
@@ -477,115 +324,20 @@
                     </table>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
-<!-- Add Moodle Instance Modal -->
-<div class="modal fade" id="addMoodleModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-plus-circle me-2"></i>Add Moodle Instance
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addMoodleForm">
-                    <div class="mb-3">
-                        <label class="form-label">Instance Name *</label>
-                        <input type="text" class="form-control" id="moodleSiteName" required placeholder="e.g., Production Moodle">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Moodle URL *</label>
-                        <input type="url" class="form-control" id="moodleUrl" required placeholder="https://moodle.example.com">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">API Token</label>
-                        <input type="text" class="form-control" id="moodleToken" placeholder="Moodle web service token (optional)">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Web Service User</label>
-                        <input type="text" class="form-control" id="webServiceUser" placeholder="Username for web service (optional)">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-gradient" onclick="saveMoodleInstance()">
-                    <i class="bi bi-plus-circle me-2"></i>Add Instance
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Moodle Instance Modal -->
-<div class="modal fade" id="editMoodleModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-pencil me-2"></i>Edit Moodle Instance
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editMoodleForm">
-                    <input type="hidden" id="editInstanceId">
-                    <div class="mb-3">
-                        <label class="form-label">Instance Name *</label>
-                        <input type="text" class="form-control" id="editMoodleSiteName" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Moodle URL *</label>
-                        <input type="url" class="form-control" id="editMoodleUrl" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">API Token</label>
-                        <input type="text" class="form-control" id="editMoodleToken">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Web Service User</label>
-                        <input type="text" class="form-control" id="editWebServiceUser">
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="editIsActive">
-                        <label class="form-check-label" for="editIsActive">Active</label>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-gradient" onclick="updateMoodleInstance()">
-                    <i class="bi bi-check-circle me-2"></i>Update Instance
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Report Modal -->
-<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="reportModalLabel">
-                    <i class="bi bi-graph-up me-2"></i>xAPI Report Generated
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="reportContent">
-                    <!-- Report content will be loaded here -->
+    <!-- Add Moodle Instance Modal -->
+    <div class="modal fade" id="addMoodleModal" tabindex="-1" aria-labelledby="addMoodleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addMoodleModalLabel">Add Moodle Instance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
+                <div class="modal-body">
+                    <form id="addMoodleForm">
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" onclick="moodleManager.downloadReport()">
-                    <i class="bi bi-download me-2"></i>Download Report
-                </button>
+                {% bootstrap_button "Close" button_type="button" button_class="btn-secondary" data_bs_dismiss="modal" %}
+                {% bootstrap_button "Download Report" button_type="button" button_class="btn-success" onclick="downloadReport()" icon="download" %}
             </div>
         </div>
     </div>
@@ -712,7 +464,7 @@ let moodleManager = {
             // Populate LRS endpoint
             const lrsEndpointElement = document.getElementById('lrsEndpoint');
             if (lrsEndpointElement) {
-                lrsEndpointElement.value = integration.lrs_endpoint || window.location.origin + '/api/moodle/event';
+                lrsEndpointElement.value = integration.lrs_endpoint || '{{ lrs_endpoint }}';
             }
             
             // Set auto sync value
@@ -1047,7 +799,6 @@ let moodleManager = {
         }
     },
     
-    // Missing functions that buttons need
     async updateMoodleInstance() {
         const id = document.getElementById('editInstanceId').value;
         const siteName = document.getElementById('editMoodleSiteName').value;
@@ -1502,20 +1253,105 @@ let moodleManager = {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Initialize popovers
+    const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl);
+    });
+    
+    // Initialize the manager
     moodleManager.init();
 });
 
 // Global functions for onclick handlers
-window.clearSelectedInstance = () => moodleManager.clearSelectedInstance();
-window.testConnection = () => moodleManager.testConnection();
-window.saveMoodleInstance = () => moodleManager.saveMoodleInstance();
-window.updateMoodleInstance = () => moodleManager.updateMoodleInstance();
-window.copyToClipboard = (text) => moodleManager.copyToClipboard(text);
-window.syncUsers = () => moodleManager.syncUsers();
-window.syncCourses = () => moodleManager.syncCourses();
-window.syncActivities = () => moodleManager.syncActivities();
-window.generateReports = () => moodleManager.generateReports();
-window.downloadReport = () => moodleManager.downloadReport();
-window.saveLrsConfig = () => moodleManager.saveLrsConfig();
+function clearSelectedInstance() {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.clearSelectedInstance();
+    }
+}
+
+function testConnection() {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.testConnection();
+    }
+}
+
+function saveMoodleInstance() {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.saveMoodleInstance();
+    }
+}
+
+function updateMoodleInstance() {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.updateMoodleInstance();
+    }
+}
+
+function copyToClipboard(text) {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.copyToClipboard(text);
+    } else {
+        navigator.clipboard.writeText(text).then(() => {
+            // Fallback message if moodleManager is not available
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+            alert.role = 'alert';
+            alert.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>Copied to clipboard
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alert);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 3000);
+        });
+    }
+}
+
+function syncUsers() {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.syncUsers();
+    }
+}
+
+function syncCourses() {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.syncCourses();
+    }
+}
+
+function syncActivities() {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.syncActivities();
+    }
+}
+
+function generateReports() {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.generateReports();
+    }
+}
+
+function downloadReport() {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.downloadReport();
+    }
+}
+
+function saveLrsConfig() {
+    if (typeof moodleManager !== 'undefined') {
+        moodleManager.saveLrsConfig();
+    }
+}
 </script>
 {% endblock %}

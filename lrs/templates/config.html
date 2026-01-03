@@ -1,186 +1,503 @@
 {% extends 'base.html' %}
+{% load django_bootstrap5 %}
 
-{% block title %}LRS Configuration - xAPI LRS{% endblock %}
+{% block title %}Configuration Status - xAPI LRS{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <!-- Header -->
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900">LRS Configuration for Moodle</h2>
-        <p class="mt-1 text-sm text-gray-600">Copy these settings into your Moodle xAPI Bridge plugin</p>
-    </div>
-
-    <!-- Configuration Cards -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- LRS Endpoint Card -->
-        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-                <h3 class="text-lg font-semibold text-white">LRS Endpoint</h3>
-            </div>
-            <div class="p-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Moodle Plugin URL</label>
-                        <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
-                            <code class="text-sm text-gray-900 break-all" id="moodle-url">{{ lrs_endpoint }}</code>
-                        </div>
-                        <button onclick="copyToClipboard('moodle-url')" class="mt-3 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2h-2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
-                            </svg>
-                            Copy Endpoint URL
-                        </button>
-                    </div>
-                    
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 class="text-sm font-semibold text-blue-900 mb-2">📋 How to Use:</h4>
-                        <ol class="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                            <li>Go to Moodle Admin → Site administration → Plugins → Local plugins → xAPI Bridge</li>
-                            <li>Paste this URL in the "LRS Endpoint" field</li>
-                            <li>Save changes</li>
-                        </ol>
-                    </div>
+<div class="min-vh-100 bg-light">
+    <!-- Hero Section -->
+    <div class="bg-primary bg-gradient bg-opacity-90 text-white">
+        <div class="container py-5">
+            <div class="text-center py-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-25 rounded-3 p-3 mb-3">
+                    <i class="bi bi-gear-fill fs-1 text-white"></i>
                 </div>
+                <h1 class="display-5 fw-bold mb-3">Configuration Status</h1>
+                <p class="lead mx-auto" style="max-width: 600px;">Monitor and manage your xAPI Bridge connection settings with real-time status updates</p>
             </div>
         </div>
+    </div>
 
-        <!-- Authentication Token Card -->
-        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
-                <h3 class="text-lg font-semibold text-white">Authentication Token</h3>
-            </div>
-            <div class="p-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Token Format</label>
-                        <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
-                            <code class="text-sm text-gray-900">Bearer &lt;your-token&gt;</code>
+    <!-- Status Overview -->
+    <div class="container position-relative" style="margin-top: -2rem;">
+        <div class="row g-4">
+            <!-- Overall Status Card -->
+            <div class="col-lg-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle {% if lrs_status == 'Configured' and auth_status == 'Configured' %}bg-success{% else %}bg-warning{% endif %} bg-gradient mb-3" style="width: 80px; height: 80px;">
+                            {% if lrs_status == 'Configured' and auth_status == 'Configured' %}
+                                <i class="bi bi-check-circle-fill text-white fs-1"></i>
+                            {% else %}
+                                <i class="bi bi-exclamation-triangle-fill text-white fs-1"></i>
+                            {% endif %}
                         </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Status</label>
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                            <div class="flex items-center">
-                                <svg class="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334.213 2.98.75 3.486l-5.58 9.92c-.75 1.334-2.722 1.334-3.486 0L.75 13.09c-.75-1.336-.75-2.986 0-4.322L6.33 6.85c.75-1.336 2.722-1.336 3.486 0l5.58 9.92z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span class="text-sm text-yellow-800">Development Mode - No Authentication Required</span>
+                        <h3 class="h5 fw-semibold mb-2">System Status</h3>
+                        <p class="text-muted mb-0">
+                            {% if lrs_status == 'Configured' and auth_status == 'Configured' %}
+                                All systems operational
+                            {% else %}
+                                Configuration required
+                            {% endif %}
+                        </p>
+                        <div class="mt-4">
+                            <div class="d-flex justify-content-between align-items-center small mb-2">
+                                <span class="text-muted">LRS Endpoint</span>
+                                <span class="badge {% if lrs_status == 'Configured' %}bg-success{% else %}bg-danger{% endif %}">{{ lrs_status }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center small">
+                                <span class="text-muted">Authentication</span>
+                                <span class="badge {% if auth_status == 'Configured' %}bg-success{% else %}bg-danger{% endif %}">{{ auth_status }}</span>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <h4 class="text-sm font-semibold text-green-900 mb-2">🔧 For Development:</h4>
-                        <p class="text-sm text-green-800">Leave the "LRS Authentication Token" field empty in Moodle plugin. Your LRS is currently configured to accept all requests.</p>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="col-lg-8">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded-3 me-3">
+                                        <i class="bi bi-lightning-charge-fill text-primary fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="h6 mb-0">LRS Endpoint</h4>
+                                        <p class="small text-muted mb-0">API connection ready</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        <h4 class="text-sm font-semibold text-gray-900 mb-2">🔒 For Production:</h4>
-                        <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                            <li>Enable authentication in Django settings</li>
-                            <li>Generate secure API tokens</li>
-                            <li>Use format: <code class="bg-gray-200 px-1 rounded">Bearer your-secure-token</code></li>
-                        </ol>
+
+                    <div class="col-md-6">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded-3 me-3">
+                                        <i class="bi bi-shield-check text-success fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="h6 mb-0">Security</h4>
+                                        <p class="small text-muted mb-0">{{ integrations.count }} integration(s)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="mt-8 bg-white shadow-lg rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a href="/admin/lrs/moodleintegration/add/" class="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 text-center flex items-center justify-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                Add Moodle Integration
-            </a>
-            
-            <a href="/test-api/" class="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 text-center flex items-center justify-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.707-.707M15.657 7.243l.707-.707M9 10v3m0 0v-3"></path>
-                </svg>
-                Test Connection
-            </a>
-            
-            <a href="/statements/" class="bg-gray-600 text-white px-4 py-3 rounded-lg hover:bg-gray-700 text-center flex items-center justify-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                View Statements
-            </a>
+    <!-- Main Configuration Cards -->
+    <div class="container mt-5">
+        <div class="row g-4">
+            <!-- LRS Endpoint Configuration -->
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-header bg-primary bg-gradient text-white">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-25 rounded-3 p-2 me-3">
+                                <i class="bi bi-link-45deg text-white fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h3 class="h5 mb-0">LRS Endpoint</h3>
+                                <p class="small mb-0 opacity-75">API connection configuration</p>
+                            </div>
+                            <span class="badge bg-white text-primary">{% if lrs_status == 'Configured' %}Active{% else %}Inactive{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            {% if lrs_status == 'Configured' %}
+                                <span class="badge rounded-pill bg-success p-2 me-2"></span>
+                                <span class="small text-success fw-medium">Endpoint Configured</span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-danger p-2 me-2"></span>
+                                <span class="small text-danger fw-medium">Not Configured</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label class="form-label small fw-semibold">Endpoint URL</label>
+                            <div class="bg-light p-3 rounded-2 mb-3">
+                                <code class="d-block text-break small font-monospace" id="lrs-endpoint-display">{{ lrs_endpoint }}</code>
+                            </div>
+                            {% bootstrap_button "Copy Endpoint URL" button_type="button" button_class="w-100 btn-primary" onclick="copyToClipboard('lrs-endpoint-display')" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authentication Configuration -->
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-header bg-success bg-gradient text-white">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-25 rounded-3 p-2 me-3">
+                                <i class="bi bi-shield-lock text-white fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h3 class="h5 mb-0">Authentication</h3>
+                                <p class="small mb-0 opacity-75">Security configuration</p>
+                            </div>
+                            <span class="badge bg-white text-success">{% if auth_status == 'Configured' %}Secured{% else %}Open{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            {% if auth_status == 'Configured' %}
+                                <span class="badge rounded-pill bg-success p-2 me-2"></span>
+                                <span class="small text-success fw-medium">Authentication Configured</span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-warning p-2 me-2"></span>
+                                <span class="small text-warning fw-medium">Development Mode</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label class="form-label small fw-semibold">Configuration Details</label>
+                            {% if auth_status == 'Configured' %}
+                                <div class="alert alert-success">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small fw-medium">Active Integrations</span>
+                                        <span class="badge bg-success rounded-pill">{{ integrations.count }}</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        {% for integration in integrations %}
+                                            <div class="d-flex align-items-center bg-white bg-opacity-50 rounded p-2 mb-1">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                <span class="small">{{ integration.moodle_site_name }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning mb-0">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                        <div>
+                                            <p class="mb-1 small fw-medium">No Moodle integrations configured</p>
+                                            <p class="mb-0 small">Add integrations to enable authentication</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Moodle Plugin Instructions -->
-    <div class="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-indigo-900 mb-4">📚 Moodle Plugin Setup Instructions</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <h4 class="font-medium text-indigo-900 mb-3">Step 1: Install Plugin</h4>
-                <ol class="text-sm text-indigo-800 space-y-2 list-decimal list-inside">
-                    <li>Copy the xapibridge folder to Moodle's /local/ directory</li>
-                    <li>Visit Moodle as administrator</li>
-                    <li>Complete the installation process</li>
-                </ol>
+    <!-- Moodle Plugin Configuration -->
+    <div class="container my-5">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-warning bg-gradient text-white">
+                <div class="d-flex align-items-center">
+                    <div class="bg-white bg-opacity-25 rounded-3 p-2 me-3">
+                        <i class="bi bi-gear-fill text-white fs-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="h5 mb-0">Moodle Plugin Settings</h3>
+                        <p class="small mb-0 opacity-75">Exact configuration for your Moodle xAPI Bridge</p>
+                    </div>
+                </div>
             </div>
-            
-            <div>
-                <h4 class="font-medium text-indigo-900 mb-3">Step 2: Configure Plugin</h4>
-                <ol class="text-sm text-indigo-800 space-y-2 list-decimal list-inside">
-                    <li>Go to Site administration → Plugins → Local plugins → xAPI Bridge</li>
-                    <li>Enter the LRS Endpoint URL from above</li>
-                    <li>Leave Authentication Token empty (development mode)</li>
-                    <li>Enable the plugin</li>
-                    <li>Save changes</li>
-                </ol>
+            <div class="card-body">
+                <div class="mb-4">
+                    <!-- LRS Endpoint Setting -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="h6 mb-0">LRS Endpoint</h4>
+                                <p class="small text-muted mb-0">{{ moodle_config.lrs_endpoint.name }}</p>
+                            </div>
+                            <span class="badge bg-primary">Required</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted mb-3">{{ moodle_config.lrs_endpoint.description }}</p>
+                            <div class="bg-light p-3 rounded-2 mb-3">
+                                <code class="d-block text-break small font-monospace" id="moodle-endpoint">{{ moodle_config.lrs_endpoint.value }}</code>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small text-muted">Default: {{ moodle_config.lrs_endpoint.default }}</span>
+                                {% bootstrap_button "Copy" button_type="button" button_class="btn-sm btn-primary" onclick="copyToClipboard('moodle-endpoint')" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LRS Authentication Token Setting -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="h6 mb-0">LRS Authentication Token</h4>
+                                <p class="small text-muted mb-0">{{ moodle_config.lrs_auth_token.name }}</p>
+                            </div>
+                            <span class="badge bg-warning text-dark">Optional</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted mb-3">{{ moodle_config.lrs_auth_token.description }}</p>
+                            <div class="bg-light p-3 rounded-2 mb-3">
+                                <input type="text" class="form-control form-control-sm bg-white" placeholder="{{ moodle_config.lrs_auth_token.placeholder }}" readonly>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="small">
+                                    {% if auth_status == 'Configured' %}
+                                        <span class="text-success"><i class="bi bi-check-circle-fill"></i> Configured in Moodle</span>
+                                    {% else %}
+                                        <span class="text-muted">For development: Leave empty</span>
+                                    {% endif %}
+                                </div>
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Format: Bearer token</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enable xAPI Bridge Setting -->
+                    <div class="card">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="h6 mb-0">Enable xAPI Bridge</h4>
+                                <p class="small text-muted mb-0">{{ moodle_config.enabled.name }}</p>
+                            </div>
+                            <span class="badge bg-success">Required</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted mb-3">{{ moodle_config.enabled.description }}</p>
+                            <div class="bg-light p-3 rounded-2 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
+                                        <i class="bi bi-check-lg text-success"></i>
+                                    </div>
+                                    <span class="fw-medium">{{ moodle_config.enabled.value }}</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small text-muted">Default: {{ moodle_config.enabled.default }}</span>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Must be enabled</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- API Access Control -->
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="h6 mb-0">API Access Control</h4>
+                            <p class="small text-muted mb-0">Manage IP whitelist for API access</p>
+                        </div>
+                        <span class="badge bg-warning text-dark">Advanced</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-3">Restrict API access to specific IP addresses or ranges for enhanced security.</p>
+                        
+                        <div class="input-group input-group-sm mb-3">
+                            <input type="text" class="form-control" placeholder="Enter IP address (e.g., 192.168.1.1 or 192.168.1.0/24)">
+                            <button class="btn btn-primary btn-sm" type="button">Add</button>
+                        </div>
+                        
+                        <div class="list-group mb-3">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-success me-2"></span>
+                                    <span class="me-2">192.168.1.0/24</span>
+                                    <small class="text-muted">(Local Network)</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-success me-2"></span>
+                                    <span>203.0.113.42</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small text-muted">2 IP addresses allowed</span>
+                            <button type="button" class="btn btn-sm btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <a href="/admin/lrs/moodleintegration/add/" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            <span>Add Moodle Integration</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="/test-api/" class="btn btn-success w-100 d-flex align-items-center justify-content-center py-3">
+                            <i class="bi bi-lightning-charge me-2"></i>
+                            <span>Test Connection</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="/statements/" class="btn btn-secondary w-100 d-flex align-items-center justify-content-center py-3">
+                            <i class="bi bi-list-ul me-2"></i>
+                            <span>View Statements</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Summary -->
+    <div class="container my-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light p-2 rounded-3 me-3">
+                            <i class="bi bi-graph-up text-primary"></i>
+                        </div>
+                        <div>
+                            <h4 class="h6 mb-0">System Status</h4>
+                            <p class="small text-muted mb-0">Last updated: <span id="last-updated">Just now</span></p>
+                        </div>
+                    </div>
+                    <button onclick="location.reload()" class="btn btn-outline-secondary btn-sm d-flex align-items-center">
+                        <i class="bi bi-arrow-clockwise me-2"></i>
+                        <span>Refresh Status</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+// Copy to clipboard function with Bootstrap toast notification
 function copyToClipboard(elementId) {
     const element = document.getElementById(elementId);
     const text = element.textContent;
     
+    // Create a temporary textarea element
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'absolute';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    
+    // Select and copy the text
+    textarea.select();
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    
+    // Show feedback
+    showCopyFeedback(successful);
+    
+    // Modern clipboard API as fallback
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-            showCopySuccess();
-        }).catch(err => {
+        navigator.clipboard.writeText(text).catch(err => {
             console.error('Failed to copy: ', err);
-            fallbackCopy(text);
         });
-    } else {
-        fallbackCopy(text);
     }
 }
 
-function fallbackCopy(text) {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-    showCopySuccess();
+// Show feedback using Bootstrap toast
+function showCopyFeedback(successful) {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
+        toastContainer.style.zIndex = '11';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white ${successful ? 'bg-success' : 'bg-danger'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi ${successful ? 'bi-check-circle' : 'bi-exclamation-triangle-fill'} me-2"></i>
+                ${successful ? 'Copied to clipboard!' : 'Failed to copy. Please try again.'}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    // Add to DOM
+    toastContainer.appendChild(toast);
+    
+    // Initialize and show the toast
+    const bsToast = new bootstrap.Toast(toast, {
+        animation: true,
+        autohide: true,
+        delay: 3000
+    });
+    
+    bsToast.show();
+    
+    // Remove toast after it's hidden
+    toast.addEventListener('hidden.bs.toast', function() {
+        toast.remove();
+    });
 }
 
-function showCopySuccess() {
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Copied!';
-    button.classList.add('bg-green-600', 'hover:bg-green-700');
-    button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-    
-    setTimeout(() => {
-        button.innerHTML = originalText;
-        button.classList.remove('bg-green-600', 'hover:bg-green-700');
-        button.classList.add('bg-blue-600', 'hover:bg-blue-700');
-    }, 2000);
+// Update last updated time
+function updateLastUpdated() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    const dateString = now.toLocaleDateString();
+    document.getElementById('last-updated').textContent = `${dateString} at ${timeString}`;
 }
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    // Update time immediately and then every minute
+    updateLastUpdated();
+    setInterval(updateLastUpdated, 60000);
+    
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Add animation to cards on scroll
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+    
+    // Observe all cards with the animate-on-scroll class
+    document.querySelectorAll('.animate-on-scroll').forEach(card => {
+        observer.observe(card);
+    });
+});
 </script>
 {% endblock %}

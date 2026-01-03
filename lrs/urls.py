@@ -19,6 +19,7 @@ urlpatterns = [
     
     # Moodle event endpoint
     path('moodle/event/', views.MoodleXAPIView.as_view(), name='moodle-xapi'),
+    path('moodle/event', views.MoodleXAPIView.as_view(), name='moodle-xapi-no-slash'),
     
     # ViewSets
     path('', include(router.urls)),

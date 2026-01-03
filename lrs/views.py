@@ -216,17 +216,20 @@ class MoodleXAPIView(APIView):
                 'success': float(grade) >= (float(max_grade) * 0.7 if max_grade else 70)
             }
         
-        # Save to LRS
-        statement_view = StatementViewSet()
-        statement_view.request = request
-        statement_view.format_kwarg = None
-        response = statement_view.xapi_statements(request)
+        # Use StatementCreateSerializer to save the statement
+        from .serializers import StatementCreateSerializer
+        serializer = StatementCreateSerializer(data=statement)
+        if serializer.is_valid():
+            statement_obj = serializer.save()
+            response_data = {'id': statement_obj.id, 'status': 'created'}
+        else:
+            response_data = serializer.errors
         
         return Response({
             'status': 'success',
             'moodle_event': event_type,
             'xapi_statement': statement,
-            'lrs_response': response.data
+            'lrs_response': response_data
         })
 
 class ActorViewSet(viewsets.ModelViewSet):
@@ -257,7 +260,7 @@ class MoodleIntegrationViewSet(viewsets.ModelViewSet):
 def dashboard(request):
     """Dashboard view"""
     # Get LRS endpoint info
-    lrs_endpoint = request.build_absolute_uri('/api/moodle/event')
+    lrs_endpoint = request.build_absolute_uri('/api/moodle/event/')
     
     # Get real statistics from database
     from .models import Statement, Actor, Activity, Verb, MoodleIntegration
@@ -300,14 +303,44 @@ def dashboard(request):
                 'name': integration.moodle_site_name,
                 'url': integration.moodle_url,
                 'last_sync': integration.last_sync.isoformat() if integration.last_sync else None
-            }
-            for integration in moodle_integrations
+            } for integration in moodle_integrations
         ]
+    }
+    
+    # Generate a secure authentication token for display
+    import secrets
+    auth_token = f"Bearer {secrets.token_urlsafe(32)}"
+    
+    # Moodle plugin configuration details
+    moodle_config = {
+        'lrs_endpoint': {
+            'name': 'local_xapibridge | lrs_endpoint',
+            'value': lrs_endpoint,
+            'description': 'The endpoint URL for your Learning Record Store (LRS)',
+            'default': 'Empty'
+        },
+        'lrs_auth_token': {
+            'name': 'local_xapibridge | lrs_auth_token',
+            'value': auth_token,
+            'description': 'The Bearer token for authenticating with the LRS',
+            'placeholder': 'Generated token below'
+        },
+        'enabled': {
+            'name': 'local_xapibridge | enabled',
+            'value': 'Yes',
+            'description': 'Enable sending Moodle events to the LRS',
+            'default': 'No'
+        }
     }
     
     import json
     context = {
         'lrs_info': json.dumps(auth_info),
+        'lrs_endpoint': lrs_endpoint,
+        'auth_token': auth_token,
+        'lrs_status': "Configured" if bool(lrs_endpoint) else "Not configured",
+        'auth_status': "Configured" if moodle_integrations.exists() else "Not configured",
+        'moodle_config': moodle_config,
         'stats': {
             'total_statements': total_statements,
             'total_actors': total_actors,
@@ -320,7 +353,6 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 def statements_view(request):
-    """Statements list view"""
     return render(request, 'statements.html')
 
 def test_api_view(request):
@@ -329,8 +361,51 @@ def test_api_view(request):
 
 def config_view(request):
     """LRS configuration view for Moodle setup"""
-    lrs_endpoint = request.build_absolute_uri('/api/moodle/event')
-    return render(request, 'config.html', {'lrs_endpoint': lrs_endpoint})
+    lrs_endpoint = request.build_absolute_uri('/api/moodle/event/')
+    
+    # Check configuration status
+    lrs_configured = bool(lrs_endpoint)
+    
+    # Check if there are any Moodle integrations configured
+    from .models import MoodleIntegration
+    integrations = MoodleIntegration.objects.filter(is_active=True)
+    auth_configured = integrations.exists()
+    
+    # Determine status
+    lrs_status = "Configured" if lrs_configured else "Not configured"
+    auth_status = "Configured" if auth_configured else "Not configured"
+    
+    # Moodle plugin configuration details
+    moodle_config = {
+        'lrs_endpoint': {
+            'name': 'local_xapibridge | lrs_endpoint',
+            'value': lrs_endpoint,
+            'description': 'The endpoint URL for your Learning Record Store (LRS)',
+            'default': 'Empty'
+        },
+        'lrs_auth_token': {
+            'name': 'local_xapibridge | lrs_auth_token',
+            'value': 'Bearer your-token-here' if not auth_configured else 'Configured',
+            'description': 'The Bearer token for authenticating with the LRS',
+            'placeholder': 'Click to enter text'
+        },
+        'enabled': {
+            'name': 'local_xapibridge | enabled',
+            'value': 'Yes',
+            'description': 'Enable sending Moodle events to the LRS',
+            'default': 'No'
+        }
+    }
+    
+    context = {
+        'lrs_endpoint': lrs_endpoint,
+        'lrs_status': lrs_status,
+        'auth_status': auth_status,
+        'integrations': integrations,
+        'moodle_config': moodle_config
+    }
+    
+    return render(request, 'config.html', context)
 
 def web_services_view(request):
     """Web services management view"""
