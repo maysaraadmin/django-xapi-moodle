@@ -1,151 +1,103 @@
 {% extends 'base.html' %}
+{% load django_bootstrap5 %}
 
 {% block title %}Statements - xAPI LRS{% endblock %}
 
+{% block extra_js %}
+{{ block.super }}
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+{% endblock %}
+
 {% block content %}
-<div x-data="statementsPage()" x-init="init()">
+<div class="container-fluid py-4">
     <!-- Header -->
-    <div class="mb-8 flex justify-between items-center">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900">xAPI Statements</h2>
-            <p class="mt-1 text-sm text-gray-600">View and filter learning statements</p>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="h2 mb-2">xAPI Statements</h2>
+                    <p class="text-muted">View and filter learning statements</p>
+                </div>
+                <button class="btn btn-outline-primary" onclick="toggleFilters()">
+                    <i class="bi bi-funnel me-2"></i>Filters
+                </button>
+            </div>
         </div>
-        <button @click="showFilters = !showFilters" class="bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
-            <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"></path>
-            </svg>
-            Filters
-        </button>
     </div>
 
     <!-- Filters -->
-    <div x-show="showFilters" x-cloak class="bg-white shadow rounded-lg mb-6 p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Filter Statements</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Actor</label>
-                <input type="text" x-model="filters.actor" @input="applyFilters" placeholder="Actor name or ID" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <div id="filtersSection" class="card shadow-sm mb-4" style="display: none;">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Filter Statements</h5>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Actor</label>
+                    <input type="text" id="actorFilter" placeholder="Actor name or ID" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Verb</label>
+                    <input type="text" id="verbFilter" placeholder="Verb ID" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Activity</label>
+                    <input type="text" id="activityFilter" placeholder="Activity ID" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Since</label>
+                    <input type="datetime-local" id="sinceFilter" class="form-control">
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Verb</label>
-                <input type="text" x-model="filters.verb" @input="applyFilters" placeholder="Verb ID" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="mt-3 text-end">
+                <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+                <button class="btn btn-primary ms-2" onclick="applyFilters()">Apply Filters</button>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Activity</label>
-                <input type="text" x-model="filters.activity" @input="applyFilters" placeholder="Activity ID" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Since</label>
-                <input type="datetime-local" x-model="filters.since" @input="applyFilters" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-        </div>
-        <div class="mt-4 flex justify-end space-x-3">
-            <button @click="clearFilters" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Clear Filters
-            </button>
         </div>
     </div>
 
     <!-- Statements List -->
-    <div class="bg-white shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">All Statements</h3>
-                <span class="text-sm text-gray-500">
-                    <span x-text="totalCount">0</span> total statements
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="card-title mb-0">All Statements</h5>
+                <span class="text-muted">
+                    <span id="totalCount">0</span> total statements
                 </span>
             </div>
             
             <!-- Loading -->
-            <div x-show="loading" class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p class="mt-2 text-gray-600">Loading statements...</p>
+            <div id="loadingSection" class="text-center py-5" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading statements...</p>
             </div>
 
             <!-- Statements -->
-            <div x-show="!loading" class="space-y-4">
-                <template x-for="statement in statements" :key="statement.statement_id">
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <span x-text="statement.actor_data?.name || 'Unknown Actor'"></span>
-                                    </span>
-                                    <span class="text-gray-500">→</span>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" x-text="statement.verb_data?.verb_id?.split('/').pop() || 'Unknown Verb'"></span>
-                                </div>
-                                <p class="text-sm text-gray-900 font-medium" x-text="statement.activity_data?.definition?.name?.['en-US'] || statement.activity_data?.activity_id || 'Unknown Activity'"></p>
-                                <p class="text-xs text-gray-500 mt-1" x-text="statement.activity_data?.activity_id"></p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-xs text-gray-500" x-text="formatDate(statement.timestamp)"></p>
-                                <button @click="toggleDetails(statement.statement_id)" class="text-xs text-blue-600 hover:text-blue-800 mt-1">
-                                    <span x-text="expandedStatements.includes(statement.statement_id) ? 'Hide' : 'Show'"></span> Details
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Expanded Details -->
-                        <div x-show="expandedStatements.includes(statement.statement_id)" x-cloak class="mt-4 pt-4 border-t border-gray-200">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <h4 class="font-medium text-gray-900 mb-2">Actor</h4>
-                                    <div class="bg-gray-50 p-3 rounded">
-                                        <p><strong>Name:</strong> <span x-text="statement.actor_data?.name"></span></p>
-                                        <p><strong>Type:</strong> <span x-text="statement.actor_data?.actor_type"></span></p>
-                                        <p><strong>Email:</strong> <span x-text="statement.actor_data?.mbox"></span></p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="font-medium text-gray-900 mb-2">Verb</h4>
-                                    <div class="bg-gray-50 p-3 rounded">
-                                        <p><strong>ID:</strong> <span x-text="statement.verb_data?.verb_id"></span></p>
-                                        <p><strong>Display:</strong> <span x-text="JSON.stringify(statement.verb_data?.display)"></span></p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Result (if exists) -->
-                            <div x-show="statement.result" class="mt-4">
-                                <h4 class="font-medium text-gray-900 mb-2">Result</h4>
-                                <div class="bg-gray-50 p-3 rounded">
-                                    <pre class="text-xs overflow-x-auto" x-text="JSON.stringify(statement.result, null, 2)"></pre>
-                                </div>
-                            </div>
-                            
-                            <!-- Full Statement JSON -->
-                            <div class="mt-4">
-                                <h4 class="font-medium text-gray-900 mb-2">Full Statement</h4>
-                                <div class="bg-gray-50 p-3 rounded">
-                                    <pre class="text-xs overflow-x-auto" x-text="JSON.stringify(statement, null, 2)"></pre>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-                
-                <!-- No Statements -->
-                <div x-show="statements.length === 0 && !loading" class="text-center py-8 text-gray-500">
-                    <i class="bi bi-file-text mx-auto fs-1 text-gray-400"></i>
-                    <p class="mt-2">No statements found</p>
-                    <p class="text-sm">Start by creating some xAPI statements or adjust your filters.</p>
-                </div>
+            <div id="statementsList">
+                <!-- Statements will be loaded here -->
+            </div>
+            
+            <!-- No Statements -->
+            <div id="noStatements" class="text-center py-5 text-muted" style="display: none;">
+                <i class="bi bi-file-text fs-1 text-muted d-block mb-3"></i>
+                <p class="mb-2">No statements found</p>
+                <p class="small">Start by creating some xAPI statements or adjust your filters.</p>
             </div>
 
             <!-- Pagination -->
-            <div x-show="!loading && statements.length > 0" class="mt-6 flex justify-between items-center">
-                <div class="text-sm text-gray-700">
-                    Showing <span x-text="(currentPage - 1) * pageSize + 1"></span> to 
-                    <span x-text="Math.min(currentPage * pageSize, totalCount)"></span> of 
-                    <span x-text="totalCount"></span> results
+            <div id="paginationSection" class="mt-4 d-flex justify-content-between align-items-center" style="display: none;">
+                <div class="text-muted">
+                    Showing <span id="showingStart">0</span> to 
+                    <span id="showingEnd">0</span> of 
+                    <span id="totalCount2">0</span> results
                 </div>
-                <div class="flex space-x-2">
-                    <button @click="previousPage" :disabled="!previousUrl" class="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+                <div>
+                    <button id="prevBtn" class="btn btn-outline-secondary me-2" onclick="previousPage()" disabled>
                         Previous
                     </button>
-                    <span class="px-3 py-1 text-sm" x-text="`Page ${currentPage}`"></span>
-                    <button @click="nextPage" :disabled="!nextUrl" class="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+                    <span class="px-3 py-1" id="currentPage">Page 1</span>
+                    <button id="nextBtn" class="btn btn-outline-secondary ms-2" onclick="nextPage()" disabled>
                         Next
                     </button>
                 </div>
@@ -155,129 +107,296 @@
 </div>
 
 <script>
-function statementsPage() {
-    return {
-        statements: [],
-        loading: true,
-        showFilters: false,
-        expandedStatements: [],
-        totalCount: 0,
-        currentPage: 1,
-        pageSize: 20,
-        previousUrl: null,
-        nextUrl: null,
-        filters: {
-            actor: '',
-            verb: '',
-            activity: '',
-            since: ''
-        },
+// Statements Page JavaScript
+let statementsData = {
+    statements: [],
+    loading: false,
+    showFilters: false,
+    expandedStatements: [],
+    totalCount: 0,
+    currentPage: 1,
+    pageSize: 20,
+    previousUrl: null,
+    nextUrl: null,
+    filters: {
+        actor: '',
+        verb: '',
+        activity: '',
+        since: ''
+    }
+};
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadStatements();
+});
+
+// Toggle filters visibility
+function toggleFilters() {
+    const filtersSection = document.getElementById('filtersSection');
+    if (filtersSection.style.display === 'none') {
+        filtersSection.style.display = 'block';
+    } else {
+        filtersSection.style.display = 'none';
+    }
+}
+
+// Apply filters
+function applyFilters() {
+    statementsData.filters.actor = document.getElementById('actorFilter').value;
+    statementsData.filters.verb = document.getElementById('verbFilter').value;
+    statementsData.filters.activity = document.getElementById('activityFilter').value;
+    statementsData.filters.since = document.getElementById('sinceFilter').value;
+    loadStatements();
+}
+
+// Clear filters
+function clearFilters() {
+    document.getElementById('actorFilter').value = '';
+    document.getElementById('verbFilter').value = '';
+    document.getElementById('activityFilter').value = '';
+    document.getElementById('sinceFilter').value = '';
+    statementsData.filters = {
+        actor: '',
+        verb: '',
+        activity: '',
+        since: ''
+    };
+    loadStatements();
+}
+
+// Load statements from API
+async function loadStatements() {
+    statementsData.loading = true;
+    updateUI();
+    
+    try {
+        const params = new URLSearchParams();
+        params.append('page_size', statementsData.pageSize);
         
-        async init() {
-            await this.loadStatements();
-        },
+        if (statementsData.filters.actor) params.append('actor', statementsData.filters.actor);
+        if (statementsData.filters.verb) params.append('verb', statementsData.filters.verb);
+        if (statementsData.filters.activity) params.append('activity', statementsData.filters.activity);
+        if (statementsData.filters.since) params.append('since', statementsData.filters.since);
         
-        async loadStatements() {
-            this.loading = true;
-            try {
-                const params = new URLSearchParams();
-                params.append('page_size', this.pageSize);
-                
-                if (this.filters.actor) params.append('actor', this.filters.actor);
-                if (this.filters.verb) params.append('verb', this.filters.verb);
-                if (this.filters.activity) params.append('activity', this.filters.activity);
-                if (this.filters.since) params.append('since', this.filters.since);
-                
-                const response = await fetch(`/api/statements/get?${params}`);
-                const data = await response.json();
-                
-                this.statements = data.results || [];
-                this.totalCount = data.count || 0;
-                this.previousUrl = data.previous;
-                this.nextUrl = data.next;
-                
-                // Calculate current page from results
-                if (this.nextUrl) {
-                    const nextPage = new URL(this.nextUrl, window.location.origin).searchParams.get('page');
-                    this.currentPage = parseInt(nextPage) - 1;
-                } else if (this.previousUrl) {
-                    const prevPage = new URL(this.previousUrl, window.location.origin).searchParams.get('page');
-                    this.currentPage = parseInt(prevPage) + 1;
-                } else {
-                    this.currentPage = 1;
-                }
-            } catch (error) {
-                console.error('Error loading statements:', error);
-            } finally {
-                this.loading = false;
-            }
-        },
+        const response = await fetch(`/api/statements/get?${params}`);
+        const data = await response.json();
         
-        async applyFilters() {
-            await this.loadStatements();
-        },
+        statementsData.statements = data.results || [];
+        statementsData.totalCount = data.count || 0;
+        statementsData.previousUrl = data.previous;
+        statementsData.nextUrl = data.next;
         
-        async clearFilters() {
-            this.filters = {
-                actor: '',
-                verb: '',
-                activity: '',
-                since: ''
-            };
-            await this.loadStatements();
-        },
+        // Calculate current page
+        if (statementsData.nextUrl) {
+            const nextPage = new URL(statementsData.nextUrl, window.location.origin).searchParams.get('page');
+            statementsData.currentPage = parseInt(nextPage) - 1;
+        } else if (statementsData.previousUrl) {
+            const prevPage = new URL(statementsData.previousUrl, window.location.origin).searchParams.get('page');
+            statementsData.currentPage = parseInt(prevPage) + 1;
+        } else {
+            statementsData.currentPage = 1;
+        }
+    } catch (error) {
+        console.error('Error loading statements:', error);
+    } finally {
+        statementsData.loading = false;
+        updateUI();
+    }
+}
+
+// Update UI based on current state
+function updateUI() {
+    const loadingSection = document.getElementById('loadingSection');
+    const statementsList = document.getElementById('statementsList');
+    const noStatements = document.getElementById('noStatements');
+    const paginationSection = document.getElementById('paginationSection');
+    const totalCount = document.getElementById('totalCount');
+    const totalCount2 = document.getElementById('totalCount2');
+    
+    // Update total count
+    totalCount.textContent = statementsData.totalCount;
+    totalCount2.textContent = statementsData.totalCount;
+    
+    if (statementsData.loading) {
+        loadingSection.style.display = 'block';
+        statementsList.style.display = 'none';
+        noStatements.style.display = 'none';
+        paginationSection.style.display = 'none';
+    } else if (statementsData.statements.length === 0) {
+        loadingSection.style.display = 'none';
+        statementsList.style.display = 'none';
+        noStatements.style.display = 'block';
+        paginationSection.style.display = 'none';
+    } else {
+        loadingSection.style.display = 'none';
+        statementsList.style.display = 'block';
+        noStatements.style.display = 'none';
+        paginationSection.style.display = 'flex';
+        renderStatements();
+        updatePagination();
+    }
+}
+
+// Render statements
+function renderStatements() {
+    const statementsList = document.getElementById('statementsList');
+    
+    const statementsHtml = statementsData.statements.map(statement => {
+        const isExpanded = statementsData.expandedStatements.includes(statement.statement_id);
+        const actorName = statement.actor_data?.name || 'Unknown Actor';
+        const verb = statement.verb_data?.verb_id?.split('/').pop() || 'Unknown Verb';
+        const activityName = statement.activity_data?.definition?.name?.['en-US'] || statement.activity_data?.activity_id || 'Unknown Activity';
+        const activityId = statement.activity_data?.activity_id || '';
+        const timestamp = formatDate(statement.timestamp);
         
-        async nextPage() {
-            if (this.nextUrl) {
-                this.loading = true;
-                try {
-                    const response = await fetch(this.nextUrl);
-                    const data = await response.json();
+        return `
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-primary">${actorName}</span>
+                                <span class="text-muted">→</span>
+                                <span class="badge bg-success">${verb}</span>
+                            </div>
+                            <h6 class="mb-1">${activityName}</h6>
+                            <small class="text-muted d-block">${activityId}</small>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block">${timestamp}</small>
+                            <button class="btn btn-sm btn-link p-0" onclick="toggleDetails('${statement.statement_id}')">
+                                ${isExpanded ? 'Hide' : 'Show'} Details
+                            </button>
+                        </div>
+                    </div>
                     
-                    this.statements = data.results || [];
-                    this.previousUrl = data.previous;
-                    this.nextUrl = data.next;
-                    this.currentPage++;
-                } catch (error) {
-                    console.error('Error loading next page:', error);
-                } finally {
-                    this.loading = false;
-                }
-            }
-        },
+                    <!-- Expanded Details -->
+                    <div id="details-${statement.statement_id}" class="${isExpanded ? '' : 'd-none'}">
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-semibold mb-2">Actor</h6>
+                                <div class="bg-light p-3 rounded">
+                                    <p class="mb-1"><strong>Name:</strong> ${statement.actor_data?.name || 'N/A'}</p>
+                                    <p class="mb-1"><strong>Type:</strong> ${statement.actor_data?.actor_type || 'N/A'}</p>
+                                    <p class="mb-0"><strong>Email:</strong> ${statement.actor_data?.mbox || 'N/A'}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-semibold mb-2">Verb</h6>
+                                <div class="bg-light p-3 rounded">
+                                    <p class="mb-1"><strong>ID:</strong> ${statement.verb_data?.verb_id || 'N/A'}</p>
+                                    <p class="mb-0"><strong>Display:</strong> ${JSON.stringify(statement.verb_data?.display) || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${statement.result ? `
+                            <div class="mt-3">
+                                <h6 class="fw-semibold mb-2">Result</h6>
+                                <div class="bg-light p-3 rounded">
+                                    <pre class="small mb-0">${JSON.stringify(statement.result, null, 2)}</pre>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="mt-3">
+                            <h6 class="fw-semibold mb-2">Full Statement</h6>
+                            <div class="bg-light p-3 rounded">
+                                <pre class="small mb-0">${JSON.stringify(statement, null, 2)}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    statementsList.innerHTML = statementsHtml;
+}
+
+// Toggle statement details
+function toggleDetails(statementId) {
+    const index = statementsData.expandedStatements.indexOf(statementId);
+    const detailsElement = document.getElementById(`details-${statementId}`);
+    
+    if (index > -1) {
+        statementsData.expandedStatements.splice(index, 1);
+        detailsElement.classList.add('d-none');
+    } else {
+        statementsData.expandedStatements.push(statementId);
+        detailsElement.classList.remove('d-none');
+    }
+}
+
+// Update pagination
+function updatePagination() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const currentPage = document.getElementById('currentPage');
+    const showingStart = document.getElementById('showingStart');
+    const showingEnd = document.getElementById('showingEnd');
+    
+    const start = (statementsData.currentPage - 1) * statementsData.pageSize + 1;
+    const end = Math.min(statementsData.currentPage * statementsData.pageSize, statementsData.totalCount);
+    
+    currentPage.textContent = `Page ${statementsData.currentPage}`;
+    showingStart.textContent = start;
+    showingEnd.textContent = end;
+    
+    prevBtn.disabled = !statementsData.previousUrl;
+    nextBtn.disabled = !statementsData.nextUrl;
+}
+
+// Navigation functions
+async function nextPage() {
+    if (statementsData.nextUrl) {
+        statementsData.loading = true;
+        updateUI();
         
-        async previousPage() {
-            if (this.previousUrl) {
-                this.loading = true;
-                try {
-                    const response = await fetch(this.previousUrl);
-                    const data = await response.json();
-                    
-                    this.statements = data.results || [];
-                    this.previousUrl = data.previous;
-                    this.nextUrl = data.next;
-                    this.currentPage--;
-                } catch (error) {
-                    console.error('Error loading previous page:', error);
-                } finally {
-                    this.loading = false;
-                }
-            }
-        },
-        
-        toggleDetails(statementId) {
-            const index = this.expandedStatements.indexOf(statementId);
-            if (index > -1) {
-                this.expandedStatements.splice(index, 1);
-            } else {
-                this.expandedStatements.push(statementId);
-            }
-        },
-        
-        formatDate(timestamp) {
-            return new Date(timestamp).toLocaleString();
+        try {
+            const response = await fetch(statementsData.nextUrl);
+            const data = await response.json();
+            
+            statementsData.statements = data.results || [];
+            statementsData.previousUrl = data.previous;
+            statementsData.nextUrl = data.next;
+            statementsData.currentPage++;
+        } catch (error) {
+            console.error('Error loading next page:', error);
+        } finally {
+            statementsData.loading = false;
+            updateUI();
         }
     }
+}
+
+async function previousPage() {
+    if (statementsData.previousUrl) {
+        statementsData.loading = true;
+        updateUI();
+        
+        try {
+            const response = await fetch(statementsData.previousUrl);
+            const data = await response.json();
+            
+            statementsData.statements = data.results || [];
+            statementsData.previousUrl = data.previous;
+            statementsData.nextUrl = data.next;
+            statementsData.currentPage--;
+        } catch (error) {
+            console.error('Error loading previous page:', error);
+        } finally {
+            statementsData.loading = false;
+            updateUI();
+        }
+    }
+}
+
+// Format date
+function formatDate(timestamp) {
+    return new Date(timestamp).toLocaleString();
 }
 </script>
 {% endblock %}
